@@ -1,0 +1,3 @@
+# requirements for py310-tts venv
+TTS==0.22.0
+torch==2.2.2
