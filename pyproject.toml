@@ -1,0 +1,31 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "k-admin"
+version = "0.1.0"
+authors = [
+  { name="Teo Restrepo", email="mateini@gmail.com" },
+]
+description = "A set of tools for knowledge administration via various AI tools"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "TTS >=0.22.0,<1",
+    "torch >=2.2.2,<3"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/cuckookernel/knowledge_admin"
+
+[project.scripts]
+"extract_text" = "k_admin.scripts.extract_text:main"
+"summarize" = "k_admin.scripts.summarize:main"
+"doc_2_audio" = "k_admin.scripts.doc_2_audio:main"

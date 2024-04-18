@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from kb_mgmt.convert_util import maybe_convert_to_txt
+from k_admin.convert_util import maybe_convert_to_txt
 
 
 def main():
@@ -39,3 +39,4 @@ def run(*, in_file: Path, encoding: str, clean_words: bool) -> None:
         return None
 
 if __name__ == "__main__":
+    main()

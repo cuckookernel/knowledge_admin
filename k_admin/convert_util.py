@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from kb_mgmt.text_util import maybe_make_checker, reconcat_lines, clean_section
+from k_admin.text_util import maybe_make_checker, reconcat_lines, clean_section
 
 
 def maybe_convert_to_txt(in_file: Path, clean_words: bool, force: bool = False) -> Optional[Path]:

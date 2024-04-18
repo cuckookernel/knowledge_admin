@@ -53,8 +53,8 @@ import torch
 from TTS.api import TTS
 from TTS.utils.audio.numpy_transforms import save_wav
 
-from kb_mgmt.text_util import clean_word, reconcat_lines, read_text_file, reconcat_lines_v2
-from kb_mgmt.convert_util import maybe_convert_to_txt, extract_text_from_pdf
+from k_admin.text_util import clean_word, reconcat_lines, read_text_file, reconcat_lines_v2
+from k_admin.convert_util import maybe_convert_to_txt, extract_text_from_pdf
 
 TTS_MODELS_BY_KEY = {
     'vits': 'tts_models/en/vctk/vits'
