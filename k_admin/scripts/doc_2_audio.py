@@ -5,43 +5,37 @@ Example usages:
 
 # Generate a wav file from a plain text document (assumed to be utf-8 encoded by default)
 # Path to wav file will my_dir/my_document.wav
-./doc_2_audio.py my_dir/my_document.txt
+doc_2_audio my_dir/my_document.txt
 
 # Will produce output file: my_dir/my_document.wav
 
 # Generate a wav file from a plain text document encoded in utf-16
 # (all encodings supported by Python open() are supported here, e.g. cp1252, iso-8859-1, etc.)
-./doc_2_audio.py -e utf-16 my_dir/my_document.txt
+doc_2_audio -e utf-16 my_dir/my_document.txt
 
 # Generate a wav file from a PDF document (requires PyPDF2 Python library to be installed)
-./doc_2_audio.py  my_dir/my_document.pdf
+doc_2_audio.py  my_dir/my_document.pdf
 
 # Generate a wav file from a PDF document and wrongly split/concatenated words
 # (requires PyPDF2 and enchant Python libraries to be installed)
-./doc_2_audio.py -c my_dir/my_document.pdf
+doc_2_audio -c my_dir/my_document.pdf
 
 # Generate an mp3 file from a PDF
 # (requires PyPDF2 and pydub Python libraries)
-./doc_2_audio.py -f mp3  my_dir/my_document.pdf
+doc_2_audio -f mp3  my_dir/my_document.pdf
 
 # Will produce output file: my_dir/my_document.mp3
 
 For other options:
-./doc_2_audio.py -h
+doc_2_audio -h
 
-Requirements:
-pip install TTS  # install coqui-tts library for text to speech conversion
-pip install PyPDF2  # only needed if input doc is going to be in PDF format
-pip install pyenchant # only needed if passing --clean-words
-pip install pydub # only needed if passing
+Extra Requirements:
+pip install PyPDF2  # if input doc is in PDF format
+pip install pyenchant # only needed if using --clean-words option
+pip install pydub # only needed if passing -f mp3
 
 It could be a good idea to create venv first (before pip install):
-python3 -m venv venv-d2a; venv-d2a/bin/activate.sh; pip install wheel
-
-Todo:
-----
-- Automatically extract plain text from a pdf document.
-- Generate mp3 instead of wav
+python3 -m venv venv-k-admin; venv-k-admin/bin/activate.sh; pip install wheel
 
 """
 
