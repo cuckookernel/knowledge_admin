@@ -16,5 +16,5 @@ source ~/venv-k-adm/bin/activate.sh
 After activating your venv, run:
 
 ```bash
-pip install https://github.com/cuckookernel/knowledge_admin.git
+pip install git+https://github.com/cuckookernel/knowledge_admin.git
 ```
