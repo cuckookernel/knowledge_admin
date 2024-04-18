@@ -18,3 +18,8 @@ After activating your venv, run:
 ```bash
 pip install git+https://github.com/cuckookernel/knowledge_admin.git
 ```
+
+For doc_2_audio conversion (e.g. txt/pd -> mp3/wav) run:
+```
+doc_2_audio --help
+```
