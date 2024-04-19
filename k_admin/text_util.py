@@ -99,7 +99,6 @@ def reconcat_lines(lines: list[str]) -> list[str]:
 
     return out_lines
 
-# %%
 
 def reconcat_lines_v2(lines: list[str]) -> list[str]:
     out_paraphs = []
@@ -138,3 +137,14 @@ def read_text_file(in_txt_file: Path, encoding: str = "utf8") -> list[str]:
 
     sections = whole_text.split('\n')
     return sections
+
+
+def count_words(text: str) -> int:
+    parts = re.split(r"\b", text)
+
+    return sum(1 if not is_space(a_str) else 0
+               for a_str in parts)
+
+
+def is_space(a_str: str) -> bool:
+    return a_str == ' ' or re.match(r'[,.:?()!]?\s+', a_str)

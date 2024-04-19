@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "k-admin"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name="Teo Restrepo", email="mateini@gmail.com" },
 ]
@@ -19,7 +19,9 @@ classifiers = [
 
 dependencies = [
     "TTS >=0.22.0,<1",
-    "torch >=2.2.2,<3"
+    "torch >=2.2.2,<3",
+    # "langchain >=0.1.14, <1",
+    # "langchain-anthropic >= 0.1.6, <1"
 ]
 
 [project.urls]
@@ -27,5 +29,5 @@ dependencies = [
 
 [project.scripts]
 "extract_text" = "k_admin.scripts.extract_text:main"
-"summarize" = "k_admin.scripts.summarize:main"
+"summarize_text" = "k_admin.scripts.summarize_text:main"
 "doc_2_audio" = "k_admin.scripts.doc_2_audio:main"

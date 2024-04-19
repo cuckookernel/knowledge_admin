@@ -19,7 +19,13 @@ After activating your venv, run:
 pip install git+https://github.com/cuckookernel/knowledge_admin.git
 ```
 
-For doc_2_audio conversion (e.g. txt/pd -> mp3/wav) run:
+For document to audio conversion (e.g. txt/pdf -> mp3/wav) run:
 ```
 doc_2_audio --help
+```
+
+
+For text summarization, install `langchain` and `langchain-anthropic` and then run:
+```
+summarize_text --help
 ```
