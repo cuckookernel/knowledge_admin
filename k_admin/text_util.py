@@ -119,10 +119,51 @@ def reconcat_lines_v2(lines: list[str]) -> list[str]:
 
     new_paraph = ' '.join(curr_buffer)
     # print(f"{len(out_paraphs)} | {new_paraph}")
-    out_paraphs.append(' '.join(curr_buffer))
+    out_paraphs.append(new_paraph)
 
     return out_paraphs
 # %%
+
+
+def reconcat_lines_v3(lines: list[str]) -> list[str]:
+    out_paraphs = []
+
+    curr_buffer = []
+    for l_idx, line in enumerate(lines):
+        is_title = re.search('^[0-9]', line) is not None and len(curr_buffer) == 0
+        ends_in_punctuation = re.search(r'[.?!]\s*$', line) is not None
+        print(f'{l_idx} |{line}|\nis_title:{is_title} ends_in_punct:{ends_in_punctuation}')
+        if is_title or ends_in_punctuation:
+            curr_buffer.append(line)
+            new_paraph = build_paraph(curr_buffer)
+            print(f"{len(out_paraphs)} | {new_paraph}")
+            curr_buffer = []
+            out_paraphs.append(new_paraph)
+        else:
+            curr_buffer.append(line)
+
+    new_paraph = build_paraph(curr_buffer)
+    # print(f"{len(out_paraphs)} | {new_paraph}")
+    out_paraphs.append(new_paraph)
+
+    return out_paraphs
+
+
+def build_paraph(curr_buffer: list[str]) -> str:
+    """Build a single string from a list of lines
+    removing '-' endings from lines and inserting spaces where appropriate"""
+
+    pieces = []
+    for i, line in enumerate(curr_buffer):
+        line = line.strip()
+        if line.endswith('-'):
+            line = line[:-1]
+            pieces.append(line)
+        else:
+            pieces.append(line)
+            pieces.append(' ')
+
+    return ''.join(pieces)
 
 
 def maybe_make_checker(clean_words: bool, extracted_text: str) -> Optional[WordChecker]:

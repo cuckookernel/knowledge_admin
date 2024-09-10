@@ -38,6 +38,7 @@ It could be a good idea to create venv first (before pip install):
 python3 -m venv venv-k-admin; venv-k-admin/bin/activate.sh; pip install wheel
 
 """
+from typing import Optional
 
 import numpy as np
 import argparse
@@ -47,13 +48,54 @@ import torch
 from TTS.api import TTS
 from TTS.utils.audio.numpy_transforms import save_wav
 
-from k_admin.text_util import clean_word, reconcat_lines, read_text_file, reconcat_lines_v2
+from k_admin.text_util import \
+    clean_word, reconcat_lines, read_text_file, reconcat_lines_v2, reconcat_lines_v3
 from k_admin.convert_util import maybe_convert_to_txt, extract_text_from_pdf
 
-TTS_MODELS_BY_KEY = {
-    'vits': 'tts_models/en/vctk/vits'
+ModelKey: type = str  # a short model key for dictionary below
+ModelName: type = str  # the fully "qualified" model name, which looks like a path: tts_models/...
+LangCode: type = str  # a two letter language code
+SpeakerId: type = str
+
+# mapping of model key to modelname
+DEFAULT_MODEL_NAME_BY_LANG: dict[LangCode, ModelName] = {
+    'en': 'tts_models/en/vctk/vits',
+    'es': 'tts_models/es/css10/vits',
+    # 'es': 'tts_models/multilingual/multi-dataset/xtts_v2' ## SLOW...
+}
+
+TTS_MODEL_NAME_BY_KEY: dict[ModelKey, ModelName] = {
+    'vits': 'tts_models/en/vctk/vits',
+    # Good quality but slow....
+    'xtts_v2': 'tts_models/multilingual/multi-dataset/xtts_v2',
+}
+
+# mapping of (Model, Language) -> Speaker Name
+DEFAULT_SPEAKER_FOR_MODEL_LANG: dict[tuple[ModelKey, LangCode], Optional[SpeakerId]] = {
+    ('tts_models/en/vctk/vits', 'en'): 'p225',
+    # p234 male - british
+    # p229 M - slow -clear
+    # p250 F - fast
+    # p251 M - fast
+    # p376 male- robotic - noisy
+    ('tts_models/multilingual/multi-dataset/xtts_v2', 'es'): 'Gilberto Mathias',
+    ('tts_models/es/css10/vits', 'es'): None
 }
 # %%
+# 'p225': 1, 'p226': 2, 'p227': 3, 'p228': 4, 'p229': 5, 'p230': 6, 'p231': 7, 'p232': 8, 'p233': 9,
+# 'p234': 10, 'p236': 11, 'p237': 12, 'p238': 13, 'p239': 14, 'p240': 15, 'p241': 16, 'p243': 17,
+# 'p244': 18, 'p245': 19, 'p246': 20, 'p247': 21, 'p248': 22, 'p249': 23, 'p250': 24,
+# 'p251': 25, 'p252': 26, 'p253': 27, 'p254': 28, 'p255': 29, 'p256': 30, 'p257': 31,
+# 'p258': 32, 'p259': 33, 'p260': 34, 'p261': 35, 'p262': 36, 'p263': 37, 'p264': 38,
+# 'p265': 39, 'p266': 40, 'p267': 41, 'p268': 42, 'p269': 43, 'p270': 44, 'p271': 45, 'p272': 46,
+# 'p273': 47, 'p274': 48, 'p275': 49, 'p276': 50, 'p277': 51, 'p278': 52, 'p279': 53, 'p280': 54,
+# 'p281': 55, 'p282': 56, 'p283': 57, 'p284': 58, 'p285': 59, 'p286': 60, 'p287': 61, 'p288': 62,
+# 'p292': 63, 'p293': 64, 'p294': 65, 'p295': 66, 'p297': 67, 'p298': 68, 'p299': 69, 'p300': 70,
+# 'p301': 71, 'p302': 72, 'p303': 73, 'p304': 74, 'p305': 75, 'p306': 76, 'p307': 77, 'p308': 78,
+# 'p310': 79, 'p311': 80, 'p312': 81, 'p313': 82, 'p314': 83, 'p316': 84, 'p317': 85, 'p318': 86,
+# 'p323': 87, 'p326': 88, 'p329': 89, 'p330': 90, 'p333': 91, 'p334': 92, 'p335': 93, 'p336': 94,
+# 'p339': 95, 'p340': 96, 'p341': 97, 'p343': 98, 'p345': 99, 'p347': 100, 'p351': 101, 'p360': 102,
+# 'p361': 103, 'p362': 104, 'p363': 105, 'p364': 106, 'p374': 107, 'p376': 108}
 
 
 def main():
@@ -65,6 +107,7 @@ def main():
         clean_words=args.clean_words,
         concat_policy=args.concat_policy,
         tts_model_key=args.tts_model_key,
+        language=args.language,
         speaker=args.speaker,
         out_fmt=args.out_fmt)
 
@@ -77,19 +120,23 @@ def get_cli_args() -> argparse.Namespace:
                             default="utf8")
     arg_parser.add_argument('-k', '--tts_model_key',
                             help=f'tts model key, possible values: '
-                                 f'{list(TTS_MODELS_BY_KEY.keys())}',
-                            default="vits")
+                                 f'{list(TTS_MODEL_NAME_BY_KEY.keys())}',
+                            default=None)
+    arg_parser.add_argument('-t', '--language',
+                            help=f'two-letter code for language, e.g "en" or "es"',
+                            default="en"),
+
     arg_parser.add_argument('-s', '--speaker',
                             help='speaker used in the case of a multi-speaker model',
-                            default="p225")
+                            default=None)
 
     arg_parser.add_argument('-c', '--clean-words',
                             help='clean words in extracted text',
                             action='store_true')
 
     arg_parser.add_argument('-l', '--concat-policy',
-                            help='policy for concatting lines',
-                            default="v2")
+                            help='policy for concatting lines, possible values v2, v3',
+                            default="v3")
 
     arg_parser.add_argument('-f', '--out-fmt',
                             help='the format of the output, either `mp3` or `wav`',
@@ -100,13 +147,20 @@ def get_cli_args() -> argparse.Namespace:
 
 def run(*, in_file: Path, encoding: str,
         clean_words: bool, concat_policy: str,
-        tts_model_key: str,
+        language: Optional[str],
+        tts_model_key: Optional[str],
         speaker: str, out_fmt: str) -> None:
     # Get device
-    tts_model_name = TTS_MODELS_BY_KEY[tts_model_key]
+    tts_model_path = determine_model_path(tts_model_key, language)
+
+    speaker = determine_speaker(tts_model_path, language, speaker)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    tts_model = TTS(tts_model_name).to(device)
+    print(f"INFO: using device={device}, building TTS model now")
+
+    tts_model = TTS(tts_model_path).to(device)
+
+    language = validate_language(tts_model, language)
 
     in_txt_file = maybe_convert_to_txt(in_file, clean_words)
     if in_txt_file is None:
@@ -115,10 +169,13 @@ def run(*, in_file: Path, encoding: str,
     sections = read_text_file(in_txt_file, encoding=encoding)
     if concat_policy == "v2":
         sections = reconcat_lines_v2(sections)
+    elif concat_policy == "v3":
+        sections = reconcat_lines_v3(sections)
     # text = "\n".join(sections)
 
     out_wav_file = in_txt_file.with_suffix(".wav")
-    tts_by_sections(tts_model, sections=sections, speaker=speaker, out_wav_path=out_wav_file)
+    tts_by_sections(tts_model, language=language, speaker=speaker,
+                    sections=sections,  out_wav_path=out_wav_file)
 
     if out_fmt == 'mp3':
         produce_mp3_output(out_wav_file)
@@ -127,10 +184,48 @@ def run(*, in_file: Path, encoding: str,
         print(f"Done generating wav file: {out_wav_file}")
 
 
-# %%
+def determine_model_path(tts_model_key: ModelKey | None, language: LangCode | None) -> str:
+    if tts_model_key is None:
+        if language is None:
+            exit_error("Need to specify either tts_model_key or language")
+            return "Ignored"
+        else:
+            tts_model_path = DEFAULT_MODEL_NAME_BY_LANG[language]
+            print(f"INFO: Selected default model path='{tts_model_path}'"
+                  f"for based on lang={language}")
+    else:
+        tts_model_path = TTS_MODEL_NAME_BY_KEY[tts_model_key]
+        print(f"INFO: model path='{tts_model_path}', mapped from tts_model_key={tts_model_key}")
+
+    return tts_model_path
 
 
-def tts_by_sections(tts_model: TTS, *, speaker: str, sections: list[str], out_wav_path: Path):
+def determine_speaker(tts_model_name: ModelName, language: LangCode, speaker: str) -> str:
+    if speaker is None:
+        key = (tts_model_name, language)
+        if key not in DEFAULT_SPEAKER_FOR_MODEL_LANG:
+            exit_error(f"The default speaker defined for (model_name, lang) = {key}")
+        speaker = DEFAULT_SPEAKER_FOR_MODEL_LANG[key]
+        print(f"INFO: Selected default speaker='{speaker}' for {key}")
+
+    return speaker
+
+
+def validate_language(tts_model, language) -> str:
+    if tts_model.languages is not None:
+        if language not in tts_model.languages:
+            print(f"ERROR: language='{language}' not in model.languages for "
+                  f"tts_model={tts_model.name}, "
+                  f"run tts --list_models to find other models that might "
+                  f"support this language")
+    else:  # model is not multilanguage
+        language = None
+
+    return language
+
+
+def tts_by_sections(tts_model: TTS, *, speaker: Optional[str], language: str,
+                    sections: list[str], out_wav_path: Path):
 
     n_sections = len(sections)
     total_len = sum(len(section) for section in sections)
@@ -143,7 +238,7 @@ def tts_by_sections(tts_model: TTS, *, speaker: str, sections: list[str], out_wa
     del sections
 
     for i, section in enumerate(sections_):
-        wav_list = tts_model.tts(text=section, speaker=speaker)
+        wav_list = tts_model.tts(text=section, speaker=speaker, language=language)
         processed_len += len(section)
 
         wav = np.array(wav_list)
@@ -170,13 +265,34 @@ def produce_mp3_output(out_wav_file: Path):
     print(f"Done generating mp3 file: {out_mp3_file}")
 
 
+def exit_error(msg: str):
+    print(f"ERROR: {msg}")
+    exit(1)
+
+
 def interactive_testing():
     # %%
-    runfile("tts/doc_2_audio.py")
+    runfile("k_admin/scripts/doc_2_audio.py")
 
     # %%
-    pdf_path = Path("/home/teo/gdrive_rclone/Academico/MAIA/Etica de la IA/Week 1/"
+    pdf_path = Path("/home/teo/gdrive_rclone/Academico/MAIA/Etica de la IA/Week-4/"
                     "1.7-Why-Teaching-ethics-to-AI-practitioners-is-important.pdf")
+    # %%
+    tts = TTS('tts_models/multilingual/multi-dataset/xtts_v2')
+    # %%
+
+    print("is_multi_speaker: ", tts.is_multi_speaker)
+    # %%
+    tts.speaker_manager.speakers
+    # %%
+    tts_by_sections(tts, sections=["Un algoritmo puede ser opaco en dos sentidos muy diferentes. "
+                                   "Por una parte, algunos algoritmos son llamados “cajas negras” "
+                                   "porque son secretos industriales protegidos por "
+                                   "leyes de propiedad intelectual."],
+                    # speaker="Alma María",
+                    speaker='Gilberto Mathias',
+                    language="es",
+                    out_wav_path=Path("test.wav"))
     # %%
     pdf_text = extract_text_from_pdf(pdf_path, clean_words=True)
     print(pdf_text[:10])
