@@ -6,6 +6,16 @@ A set of tools for knowledge transformation and administration supported by AI m
 
 ### Installation 
 
+#### System prereqs:
+
+On Linux
+```bash
+sudo apt install espeak-ng
+sudo apt install ffmpeg # only needed if producing mp3 output
+```
+
+
+
 Important: Create a venv first! For example:
 
 ```bash
@@ -20,12 +30,14 @@ pip install git+https://github.com/cuckookernel/knowledge_admin.git
 ```
 
 For document to audio conversion (e.g. txt/pdf -> mp3/wav) run:
-```
-doc_2_audio --help
+
+```bash
+doc2audio --help
 ```
 
 
 For text summarization, install `langchain` and `langchain-anthropic` and then run:
-```
-summarize_text --help
+
+```bash
+summarize-text --help
 ```
